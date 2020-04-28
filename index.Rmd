@@ -1,5 +1,5 @@
 ---
-title: "Vessel Densitis in the Belgian Part of the North Sea"
+title: "Vessel Densities in the Belgian Part of the North Sea"
 author: "Lennert Schepers"
 date: "4/28/2020"
 output: html_document
