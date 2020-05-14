@@ -109,7 +109,8 @@ Cargo <- brick(x = c('Cargo-2019-01' = getBelgianCSW(2019, 1, "01"),
                      'Cargo-2019-12' = getBelgianCSW(2019, 12, "01"),
                      'Cargo-2020-01' = getBelgianCSW(2020, 1, "01"),
                      'Cargo-2020-02' = getBelgianCSW(2020, 2, "01"),
-                     'Cargo-2020-03' = getBelgianCSW(2020, 3, "01")
+                     'Cargo-2020-03' = getBelgianCSW(2020, 3, "01"),
+                     'Cargo-2020-04' = getBelgianCSW(2020, 4, "01")
                                    )
 )
 
@@ -128,7 +129,8 @@ Fishing <- brick(x = c('Fishing-2019-01' = getBelgianCSW(2019, 1, "02"),
                      'Fishing-2019-12' = getBelgianCSW(2019, 12, "02"),
                      'Fishing-2020-01' = getBelgianCSW(2020, 1, "02"),
                      'Fishing-2020-02' = getBelgianCSW(2020, 2, "02"),
-                     'Fishing-2020-03' = getBelgianCSW(2020, 3, "02")
+                     'Fishing-2020-03' = getBelgianCSW(2020, 3, "02"),
+                     'Fishing-2020-04' = getBelgianCSW(2020, 4, "02")
                      )
 )
 
@@ -148,7 +150,8 @@ Passenger <- brick(x = c('Passenger-2019-01' = getBelgianCSW(2019, 1, "03"),
                         'Passenger-2019-12' = getBelgianCSW(2019, 12, "03"),
                         'Passenger-2020-01' = getBelgianCSW(2020, 1, "03"),
                         'Passenger-2020-02' = getBelgianCSW(2020, 2, "03"),
-                        'Passenger-2020-03' = getBelgianCSW(2020, 3, "03")
+                        'Passenger-2020-03' = getBelgianCSW(2020, 3, "03"),
+                        'Passenger-2020-04' = getBelgianCSW(2020, 4, "03")
 )
 )
 
@@ -166,7 +169,8 @@ Tanker <- brick(x = c('Tanker-2019-01' = getBelgianCSW(2019, 1, "04"),
                       'Tanker-2019-12' = getBelgianCSW(2019, 12, "04"),
                       'Tanker-2020-01' = getBelgianCSW(2020, 1, "04"),
                       'Tanker-2020-02' = getBelgianCSW(2020, 2, "04"),
-                      'Tanker-2020-03' = getBelgianCSW(2020, 3, "04")
+                      'Tanker-2020-03' = getBelgianCSW(2020, 3, "04"),
+                      'Tanker-2020-04' = getBelgianCSW(2020, 4, "04")
 )
 )
 
@@ -184,7 +188,8 @@ Other <- brick(x = c('Other-2019-01' = getBelgianCSW(2019, 1, "05"),
                       'Other-2019-12' = getBelgianCSW(2019, 12, "05"),
                       'Other-2020-01' = getBelgianCSW(2020, 1, "05"),
                       'Other-2020-02' = getBelgianCSW(2020, 2, "05"),
-                      'Other-2020-03' = getBelgianCSW(2020, 3, "05")
+                      'Other-2020-03' = getBelgianCSW(2020, 3, "05"),
+                      'Other-2020-04' = getBelgianCSW(2020, 4, "05")
 )
 )
 
@@ -202,7 +207,8 @@ All <- brick(x = c('All-2019-01' = getBelgianCSW(2019, 1, "All"),
                    'All-2019-12' = getBelgianCSW(2019, 12, "All"),
                    'All-2020-01' = getBelgianCSW(2020, 1, "All"),
                    'All-2020-02' = getBelgianCSW(2020, 2, "All"),
-                   'All-2020-03' = getBelgianCSW(2020, 3, "All")
+                   'All-2020-03' = getBelgianCSW(2020, 3, "All"),
+                   'All-2020-04' = getBelgianCSW(2020, 4, "All")
 )
 )
 ```
@@ -212,7 +218,7 @@ We extract for all values of the Belgian EEZ, the average value of all raster ce
 
 ```{r, message = FALSE, warning = FALSE}
 # create data frame, with 1st column 'time'
-  df.sr <- data.frame(Date = seq(as.Date("2019/1/1"), by = "month", length.out = 15))
+  df.sr <- data.frame(Date = seq(as.Date("2019/1/1"), by = "month", length.out = 16))
 
   # extract all values from the rasters, by the BCP polygon, and average the values.
   df.sr$Cargo     <- as.vector(extract(Cargo, BCP, fun = mean))
@@ -246,7 +252,7 @@ ggplot(df.sr.long, aes(x = Date, y = value, group = variable)) +
 
 ```{r, message = FALSE, warning = FALSE}
 # create data frame, with 1st column 'time'
-  df.Scheldt <- data.frame(Date = seq(as.Date("2019/1/1"), by = "month", length.out = 15))
+  df.Scheldt <- data.frame(Date = seq(as.Date("2019/1/1"), by = "month", length.out = 16))
 
   # extract all values from the rasters, by the WScheldt polygon, and average the values.
   df.Scheldt$Cargo     <- as.vector(extract(Cargo, WScheldt, fun = mean))
@@ -281,29 +287,29 @@ ggplot(df.Scheldt.long, aes(x = Date, y = value, group = variable)) +
 If we want to compare the difference between 2020 vs 2019:
 
 ```{r, message = FALSE, warning = FALSE}
-# Average map of January-March 2019
-r2019_0103 <- brick(c(
-  Cargo_2019_0103 = mean(Cargo[[1:3]]),
-  Fishing_2019_0103 = mean(Fishing[[1:3]]),
-  Passenger_2019_0103 = mean(Passenger[[1:3]]),
-  Tanker_2019_0103 = mean(Tanker[[1:3]]),
-  Other_2019_0103 = mean(Other[[1:3]]),
-  All_2019_0103 = mean(All[[1:3]])
+# Average map of February-April 2019
+r2019_0204 <- brick(c(
+  Cargo_2019_0204 = mean(Cargo[[2:4]]),
+  Fishing_2019_0204 = mean(Fishing[[2:4]]),
+  Passenger_2019_0204 = mean(Passenger[[2:4]]),
+  Tanker_2019_0204 = mean(Tanker[[2:4]]),
+  Other_2019_0204 = mean(Other[[2:4]]),
+  All_2019_0204 = mean(All[[2:4]])
 )
 )
   
-# Average map of January-March 2020
-r2020_0103 <- brick(c(
-  Cargo_2020_0103 = mean(Cargo[[13:15]]),
-  Fishing_2020_0103 = mean(Fishing[[13:15]]),
-  Passenger_2020_0103 = mean(Passenger[[13:15]]),
-  Tanker_2020_0103 = mean(Tanker[[13:15]]),
-  Other_2020_0103 = mean(Other[[13:15]]),
-  All_2020_0103 = mean(All[[13:15]])
+# Average map of February-April 2020
+r2020_0204 <- brick(c(
+  Cargo_2020_0204 = mean(Cargo[[14:16]]),
+  Fishing_2020_0204 = mean(Fishing[[14:16]]),
+  Passenger_2020_0204 = mean(Passenger[[14:16]]),
+  Tanker_2020_0204 = mean(Tanker[[14:16]]),
+  Other_2020_0204 = mean(Other[[14:16]]),
+  All_2020_0204 = mean(All[[14:16]])
 )
 )
 
-mapview(r2019_0103) + mapview(r2020_0103)
+mapview(r2019_0204) + mapview(r2020_0204)
 ```
 
 ## Anomaly maps
@@ -315,42 +321,48 @@ If we want to compare the difference between 2020 vs 2019:
 Anomaly_Cargo <- brick(c(
   Anomaly_Cargo_01 = mean(Cargo[[1]] - Cargo[[13]]),
   Anomaly_Cargo_02 = mean(Cargo[[2]] - Cargo[[14]]),
-  Anomaly_Cargo_03 = mean(Cargo[[3]] - Cargo[[15]])
+  Anomaly_Cargo_03 = mean(Cargo[[3]] - Cargo[[15]]),
+  Anomaly_Cargo_04 = mean(Cargo[[4]] - Cargo[[16]])
 )
 )
 
 Anomaly_Fishing <- brick(c(
   Anomaly_Fishing_01 = mean(Fishing[[1]] - Fishing[[13]]),
   Anomaly_Fishing_02 = mean(Fishing[[2]] - Fishing[[14]]),
-  Anomaly_Fishing_03 = mean(Fishing[[3]] - Fishing[[15]])
+  Anomaly_Fishing_03 = mean(Fishing[[3]] - Fishing[[15]]),
+  Anomaly_Fishing_03 = mean(Fishing[[4]] - Fishing[[16]])
 )
 )
 
 Anomaly_Passenger <- brick(c(
   Anomaly_Passenger_01 = mean(Passenger[[1]] - Passenger[[13]]),
   Anomaly_Passenger_02 = mean(Passenger[[2]] - Passenger[[14]]),
-  Anomaly_Passenger_03 = mean(Passenger[[3]] - Passenger[[15]])
+  Anomaly_Passenger_03 = mean(Passenger[[3]] - Passenger[[15]]),
+  Anomaly_Passenger_04 = mean(Passenger[[4]] - Passenger[[16]])
 )
 )
 
 Anomaly_Tanker <- brick(c(
   Anomaly_Tanker_01 = mean(Tanker[[1]] - Tanker[[13]]),
   Anomaly_Tanker_02 = mean(Tanker[[2]] - Tanker[[14]]),
-  Anomaly_Tanker_03 = mean(Tanker[[3]] - Tanker[[15]])
+  Anomaly_Tanker_03 = mean(Tanker[[3]] - Tanker[[15]]),
+  Anomaly_Tanker_04 = mean(Tanker[[4]] - Tanker[[16]])
 )
 )
 
 Anomaly_Other <- brick(c(
   Anomaly_Other_01 = mean(Other[[1]] - Other[[13]]),
   Anomaly_Other_02 = mean(Other[[2]] - Other[[14]]),
-  Anomaly_Other_03 = mean(Other[[3]] - Other[[15]])
+  Anomaly_Other_03 = mean(Other[[3]] - Other[[15]]),
+  Anomaly_Other_04 = mean(Other[[4]] - Other[[16]])
 )
 )
 
 Anomaly_All <- brick(c(
   Anomaly_All_01 = mean(All[[1]] - All[[13]]),
   Anomaly_All_02 = mean(All[[2]] - All[[14]]),
-  Anomaly_All_03 = mean(All[[3]] - All[[15]])
+  Anomaly_All_03 = mean(All[[3]] - All[[15]]),
+  Anomaly_All_04 = mean(All[[4]] - All[[16]])
 )
 )
 
@@ -360,7 +372,7 @@ mapview(Anomaly_All)
 Plot anomalies January-March combined:
 
 ```{r}
-mapview(r2020_0103 - r2019_0103)
+mapview(r2020_0204 - r2019_0204)
 ```
 
 
