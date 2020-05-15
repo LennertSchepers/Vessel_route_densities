@@ -282,9 +282,15 @@ ggplot(df.Scheldt.long, aes(x = Date, y = value, group = variable)) +
 ```
 
 
-## Density Maps
+## 2020 vs 2019
 
-If we want to compare the difference between 2020 vs 2019:
+We create a mean value for
+
+ - February - April 2019
+ - February - April 2020
+ 
+And plot both periods rasters
+(the map is the Fishing type example)
 
 ```{r, message = FALSE, warning = FALSE}
 # Average map of February-April 2019
@@ -309,76 +315,79 @@ r2020_0204 <- brick(c(
 )
 )
 
-mapview(r2019_0204) + mapview(r2020_0204)
+
+# Plot the February - April Fishing maps for 2019 and 2020
+mapview(r2019_0204[['Fishing_2019_0204']]) + mapview(r2020_0204[['Fishing_2020_0204']])
 ```
 
 ## Anomaly maps
 
-If we want to compare the difference between 2020 vs 2019:
+Comparin the period February-April 2020 vs 2019:
+(the different layers are the different boat types)
+```{r}
+anomaly_0204 <- r2020_0204 - r2019_0204
+
+mapview(anomaly_0204)
+
+```
+
+
+Comparing the month-by-month differences between 2020 vs 2019:
+(the map is the Fishing type example)
 
 ```{r, message = FALSE, warning = FALSE}
 # Anomaly map January-April 2020 - January-April 2019
 Anomaly_Cargo <- brick(c(
-  Anomaly_Cargo_01 = mean(Cargo[[1]] - Cargo[[13]]),
-  Anomaly_Cargo_02 = mean(Cargo[[2]] - Cargo[[14]]),
-  Anomaly_Cargo_03 = mean(Cargo[[3]] - Cargo[[15]]),
-  Anomaly_Cargo_04 = mean(Cargo[[4]] - Cargo[[16]])
+  Anomaly_Cargo_01 = mean(Cargo[[13]] - Cargo[[1]]),
+  Anomaly_Cargo_02 = mean(Cargo[[14]] - Cargo[[2]]),
+  Anomaly_Cargo_03 = mean(Cargo[[15]] - Cargo[[3]]),
+  Anomaly_Cargo_04 = mean(Cargo[[16]] - Cargo[[4]])
 )
 )
 
 Anomaly_Fishing <- brick(c(
-  Anomaly_Fishing_01 = mean(Fishing[[1]] - Fishing[[13]]),
-  Anomaly_Fishing_02 = mean(Fishing[[2]] - Fishing[[14]]),
-  Anomaly_Fishing_03 = mean(Fishing[[3]] - Fishing[[15]]),
-  Anomaly_Fishing_03 = mean(Fishing[[4]] - Fishing[[16]])
+  Anomaly_Fishing_01 = mean(Fishing[[13]] - Fishing[[1]]),
+  Anomaly_Fishing_02 = mean(Fishing[[14]] - Fishing[[2]]),
+  Anomaly_Fishing_03 = mean(Fishing[[15]] - Fishing[[3]]),
+  Anomaly_Fishing_03 = mean(Fishing[[16]] - Fishing[[4]])
 )
 )
 
 Anomaly_Passenger <- brick(c(
-  Anomaly_Passenger_01 = mean(Passenger[[1]] - Passenger[[13]]),
-  Anomaly_Passenger_02 = mean(Passenger[[2]] - Passenger[[14]]),
-  Anomaly_Passenger_03 = mean(Passenger[[3]] - Passenger[[15]]),
-  Anomaly_Passenger_04 = mean(Passenger[[4]] - Passenger[[16]])
+  Anomaly_Passenger_01 = mean(Passenger[[13]] - Passenger[[1]]),
+  Anomaly_Passenger_02 = mean(Passenger[[14]] - Passenger[[2]]),
+  Anomaly_Passenger_03 = mean(Passenger[[15]] - Passenger[[3]]),
+  Anomaly_Passenger_04 = mean(Passenger[[16]] - Passenger[[4]])
 )
 )
 
 Anomaly_Tanker <- brick(c(
-  Anomaly_Tanker_01 = mean(Tanker[[1]] - Tanker[[13]]),
-  Anomaly_Tanker_02 = mean(Tanker[[2]] - Tanker[[14]]),
-  Anomaly_Tanker_03 = mean(Tanker[[3]] - Tanker[[15]]),
-  Anomaly_Tanker_04 = mean(Tanker[[4]] - Tanker[[16]])
+  Anomaly_Tanker_01 = mean(Tanker[[13]] - Tanker[[1]]),
+  Anomaly_Tanker_02 = mean(Tanker[[14]] - Tanker[[2]]),
+  Anomaly_Tanker_03 = mean(Tanker[[15]] - Tanker[[3]]),
+  Anomaly_Tanker_04 = mean(Tanker[[16]] - Tanker[[4]])
 )
 )
 
 Anomaly_Other <- brick(c(
-  Anomaly_Other_01 = mean(Other[[1]] - Other[[13]]),
-  Anomaly_Other_02 = mean(Other[[2]] - Other[[14]]),
-  Anomaly_Other_03 = mean(Other[[3]] - Other[[15]]),
-  Anomaly_Other_04 = mean(Other[[4]] - Other[[16]])
+  Anomaly_Other_01 = mean(Other[[13]] - Other[[1]]),
+  Anomaly_Other_02 = mean(Other[[14]] - Other[[2]]),
+  Anomaly_Other_03 = mean(Other[[15]] - Other[[3]]),
+  Anomaly_Other_04 = mean(Other[[16]] - Other[[4]])
 )
 )
 
 Anomaly_All <- brick(c(
-  Anomaly_All_01 = mean(All[[1]] - All[[13]]),
-  Anomaly_All_02 = mean(All[[2]] - All[[14]]),
-  Anomaly_All_03 = mean(All[[3]] - All[[15]]),
-  Anomaly_All_04 = mean(All[[4]] - All[[16]])
+  Anomaly_All_01 = mean(All[[13]] - All[[1]]),
+  Anomaly_All_02 = mean(All[[14]] - All[[2]]),
+  Anomaly_All_03 = mean(All[[15]] - All[[3]]),
+  Anomaly_All_04 = mean(All[[16]] - All[[4]])
 )
 )
 
-mapview(Anomaly_All)
-```
-
-Plot anomalies January-March combined:
-
-```{r}
-mapview(r2020_0204 - r2019_0204)
+#Plot the example of all combined Fishing types
+mapview(Anomaly_Fishing)
 ```
 
 
-```{r}
-# Anomaly graph?
-
-#### TO DO ##### 
-```
 
