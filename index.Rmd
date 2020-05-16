@@ -23,6 +23,7 @@ First, we load the R libraries that we will use
 library(raster)
 library(sf)
 library(mapview)
+library(slideview)
 library(ggplot2)
 library(data.table)
 ```
@@ -315,19 +316,45 @@ r2020_0204 <- brick(c(
 )
 )
 
-
 # Plot the February - April Fishing maps for 2019 and 2020
-mapview(r2019_0204[['Fishing_2019_0204']]) + mapview(r2020_0204[['Fishing_2020_0204']])
+mapview(c(r2019_0204[['Fishing_2019_0204']],
+          r2020_0204[['Fishing_2020_0204']])
+        )
+
 ```
+
+### BCP maps 2019 vs 2020
+
+```{r}
+mapview(c(crop(r2019_0204[['Fishing_2019_0204']], BCP),
+          crop(r2020_0204[['Fishing_2020_0204']], BCP))
+        )
+```
+
+### Scheldt maps 2019 vs 2020
+
+```{r}
+mapview(c(crop(r2019_0204[['Fishing_2019_0204']], WScheldt),
+          crop(r2020_0204[['Fishing_2020_0204']], WScheldt))
+        )
+```
+
 
 ## Anomaly maps
 
 Comparin the period February-April 2020 vs 2019:
 (the different layers are the different boat types)
+
+
 ```{r}
 anomaly_0204 <- r2020_0204 - r2019_0204
 
-mapview(anomaly_0204)
+pal <- grDevices::colorRampPalette(grDevices::hcl.colors(255, palette = "BrBG"))
+mapView(anomaly_0204,
+        col.regions = pal,
+        at = c(-1000, -200, -100, -50, -25,
+               25, 50, 100, 200, 1000)
+        )
 
 ```
 
@@ -349,7 +376,7 @@ Anomaly_Fishing <- brick(c(
   Anomaly_Fishing_01 = mean(Fishing[[13]] - Fishing[[1]]),
   Anomaly_Fishing_02 = mean(Fishing[[14]] - Fishing[[2]]),
   Anomaly_Fishing_03 = mean(Fishing[[15]] - Fishing[[3]]),
-  Anomaly_Fishing_03 = mean(Fishing[[16]] - Fishing[[4]])
+  Anomaly_Fishing_04 = mean(Fishing[[16]] - Fishing[[4]])
 )
 )
 
@@ -386,7 +413,11 @@ Anomaly_All <- brick(c(
 )
 
 #Plot the example of all combined Fishing types
-mapview(Anomaly_Fishing)
+mapview(Anomaly_Fishing,
+        col.regions = pal,
+        at = c(-1000, -200, -100, -50, -25,
+               25, 50, 100, 200, 1000)
+        )
 ```
 
 
