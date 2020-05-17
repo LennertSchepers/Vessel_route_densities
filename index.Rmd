@@ -1,15 +1,24 @@
 ---
-title: "Vessel Densities in the Belgian Part of the North Sea"
+title: "Impact of Covid-19 on Vessel densities in the Belgian Part of the North Sea"
 author: "Lennert Schepers"
-date: "4/28/2020"
-output: html_document
+date: "2020-05-17"
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Vessel density in Belgium
+## Introduction
+
+In this exercise we want to analyse the impact of COVID-19 on vessel densities in the Belgian Part of the North Sea and the Western Scheldt.
+There are different ways to calculate vessel densities, therefore we first start with some background information on two different types of vessel densities and where this data can be found.
+The data and code of this analysis if freely available, see the 'Data availability' and 'Code availability' sections at the end of this document.
+
+## Vessel densities
 
 In this small exercise we want to analyse vessel route densities in the Belgian part of the North Sea.
 The data for this exercise comes from [EMODnet Human activities](https://www.emodnet-humanactivities.eu/).
@@ -17,19 +26,19 @@ EMODnet Human Activities has two types of vessel density data, one created by th
 
 And one created by the European Maritime Safety Agency (EMSA), giving the number of routes per square km per month) by ship type. The advantage of the latter is that this provides recent information. For example, writing now 28th of April, the monthly aggregated data is already available for March 2020. For details, see [here](https://www.emodnet-humanactivities.eu/search-results.php?dataname=Route+density+%28source%3A+EMSA%29) 
 
-First, we load the R libraries that we will use
-```{r libs, message = FALSE, warning = FALSE}
-## load rasters
-library(raster)
-library(sf)
-library(mapview)
-library(slideview)
-library(ggplot2)
-library(data.table)
+
+```{r libs, message = FALSE, warning = FALSE, echo = FALSE}
+# First, we load the R libraries that we will use
+library(raster)  # for raster data
+library(sf)      # for spatial data
+library(mapview) # for interactive maps
+library(ggplot2) # for plots
+library(data.table) # for manipulation dataframes/tables
+library(mregions)  # for standardize marine regions from http://www.marineregions.org
 ```
 
 For this exercise, we are only interested in Belgian waters, so we'll use bounding box of the Belgian Exclusive Economic ZOne:
-```{r, message = FALSE, warning = FALSE}
+```{r message = FALSE, warning = FALSE, echo = FALSE}
 BCP <- st_read("http://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=eez&cql_filter=mrgid=%273293%27&outputFormat=application/json")
 # BCP <- st_cast(BCP, "POLYGON")
 BCP_bbox <- st_bbox(BCP$geometry)
@@ -38,7 +47,7 @@ mapview(BCP)
 ```
 
 For the Scheldt Estuary:
-```{r, message = FALSE, warning = FALSE}
+```{r message = FALSE, warning = FALSE, echo = FALSE}
 WScheldt <- st_read("http://geo.vliz.be/geoserver/wfs?request=getfeature&service=wfs&version=1.1.0&typename=MarineRegions:seavox_v16&outputformat=json&filter=%3CPropertyIsEqualTo%3E%3CPropertyName%3Esub_region%3C%2FPropertyName%3E%3CLiteral%3EWESTERN+SCHELDT%3C%2FLiteral%3E%3C%2FPropertyIsEqualTo%3E")
 WScheldt_bbox <- st_bbox(WScheldt$geometry)
 mapview(WScheldt)
@@ -48,9 +57,11 @@ bbox_BCP_Sch <- st_bbox(st_union(BCP,WScheldt))
 ```
 
 
-Now, we create a function to retrieve the route density for a particular fishing type, month and year *in Belgian waters*
 
-```{r WCS function, message = FALSE, warning = FALSE}
+
+```{r WCS function, message = FALSE, warning = FALSE, echo = FALSE}
+# Now, we create a function to retrieve the route density for a particular fishing type, month and year *in Belgian waters*
+
 base_url <- 'https://ows.emodnet-humanactivities.eu/wcs?SERVICE=WCS&VERSION=1.0.0&request=GetCapabilities'
 
 # BACKGROUND INFO ON EMODNet Human Activities' WCS Service, and the 'route density maps'
@@ -92,9 +103,10 @@ getBelgianCSW <- function(year, month, vessel_code){
 
 ```
 
-Now we extract the Vessel density data from the WCS function, and store it in a rasterbrick:
+Now we extract the Vessel density data, for example here for the Fhishing map of January 2019:
 
-```{r get_WCS_data, message = FALSE, warning = FALSE}
+```{r get_WCS_data, message = FALSE, warning = FALSE, echo = FALSE}
+# extract vessel density data and store it in a rasterbrick:
 
 Cargo <- brick(x = c('Cargo-2019-01' = getBelgianCSW(2019, 1, "01"),
                      'Cargo-2019-02' = getBelgianCSW(2019, 2, "01"),
@@ -214,10 +226,14 @@ All <- brick(x = c('All-2019-01' = getBelgianCSW(2019, 1, "All"),
 )
 ```
 
-No we create a data frame to store the statistics that we will extract from the rasters.
-We extract for all values of the Belgian EEZ, the average value of all raster cells.
+### Belgian EEZ:
 
-```{r, message = FALSE, warning = FALSE}
+We extract all data from all the cells, and calculate the average for the whole BCP.
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# No we create a data frame to store the statistics that we will extract from the rasters.
+# We extract for all values of the Belgian EEZ, the average value of all raster cells.
+
 # create data frame, with 1st column 'time'
   df.sr <- data.frame(Date = seq(as.Date("2019/1/1"), by = "month", length.out = 16))
 
@@ -236,7 +252,7 @@ We extract for all values of the Belgian EEZ, the average value of all raster ce
 
 A plot of the result:
 
-```{r plot, message = FALSE, warning = FALSE}
+```{r plot, message = FALSE, warning = FALSE, echo = FALSE}
 
 ggplot(df.sr.long, aes(x = Date, y = value, group = variable)) +
   geom_point(aes(color = variable)) +
@@ -249,9 +265,9 @@ ggplot(df.sr.long, aes(x = Date, y = value, group = variable)) +
 ```
 
 
-## Scheldt estuary:
+### Scheldt estuary:
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # create data frame, with 1st column 'time'
   df.Scheldt <- data.frame(Date = seq(as.Date("2019/1/1"), by = "month", length.out = 16))
 
@@ -270,7 +286,7 @@ ggplot(df.sr.long, aes(x = Date, y = value, group = variable)) +
 
 A plot of the result:
 
-```{r Schelde_plot, message = FALSE, warning = FALSE}
+```{r Schelde_plot, message = FALSE, warning = FALSE, echo = FALSE}
 
 ggplot(df.Scheldt.long, aes(x = Date, y = value, group = variable)) +
   geom_point(aes(color = variable)) +
@@ -293,7 +309,7 @@ We create a mean value for
 And plot both periods rasters
 (the map is the Fishing type example)
 
-```{r, message = FALSE, warning = FALSE}
+```{r message = FALSE, warning = FALSE, echo = FALSE}
 # Average map of February-April 2019
 r2019_0204 <- brick(c(
   Cargo_2019_0204 = mean(Cargo[[2:4]]),
@@ -325,7 +341,7 @@ mapview(c(r2019_0204[['Fishing_2019_0204']],
 
 ### BCP maps 2019 vs 2020
 
-```{r}
+```{r echo = FALSE}
 mapview(c(crop(r2019_0204[['Fishing_2019_0204']], BCP),
           crop(r2020_0204[['Fishing_2020_0204']], BCP))
         )
@@ -333,7 +349,7 @@ mapview(c(crop(r2019_0204[['Fishing_2019_0204']], BCP),
 
 ### Scheldt maps 2019 vs 2020
 
-```{r}
+```{r echo = FALSE}
 mapview(c(crop(r2019_0204[['Fishing_2019_0204']], WScheldt),
           crop(r2020_0204[['Fishing_2020_0204']], WScheldt))
         )
@@ -342,11 +358,11 @@ mapview(c(crop(r2019_0204[['Fishing_2019_0204']], WScheldt),
 
 ## Anomaly maps
 
-Comparin the period February-April 2020 vs 2019:
+Comparing the period February-April 2020 vs 2019:
 (the different layers are the different boat types)
 
 
-```{r}
+```{r echo = FALSE}
 anomaly_0204 <- r2020_0204 - r2019_0204
 
 pal <- grDevices::colorRampPalette(grDevices::hcl.colors(255, palette = "BrBG"))
@@ -362,7 +378,7 @@ mapView(anomaly_0204,
 Comparing the month-by-month differences between 2020 vs 2019:
 (the map is the Fishing type example)
 
-```{r, message = FALSE, warning = FALSE}
+```{r message = FALSE, warning = FALSE, echo = FALSE}
 # Anomaly map January-April 2020 - January-April 2019
 Anomaly_Cargo <- brick(c(
   Anomaly_Cargo_01 = mean(Cargo[[13]] - Cargo[[1]]),
@@ -421,4 +437,27 @@ mapview(Anomaly_Fishing,
 ```
 
 
+## Data availability
+
+- *Vessel densities*
+The data from this exercise is freely available at the [EMODnet Human activities](https://www.emodnet-humanactivities.eu/) portal. [EMODnet](https://www.emodnet.eu/) stands for the European Marine Observation and Data Network, EMODnet is a network of organisations that are collecting, standardizing and making European marine data and data products freely available, supported by EU's integrated marine policy.
+The vessel densities used in this exercise is provided by the European Maritime Safety Agency (EMSA) to EMODnet human activities and available [here](https://www.emodnet-humanactivities.eu/search-results.php?dataname=Vessel+Density+).
+
+- *Maritime boundaries*
+The maritime boundaries used in this exercise are from [MarineRegions.org](http://www.marineRegions.org). MarineRegions.org maintains a standard, relational list of geographic names coupled with information and maps of the geographic location of these features. This improves access and clarity of the different geographic, marine names and allows an improved linking of these locations to databases.
+The more information about the polygons used in this exercise:
+  - the Western Scheldt: http://marineregions.org/gazetteer.php?p=details&id=4752
+  - the Belgian Exclusive Economic Zone: http://marineregions.org/gazetteer.php?p=details&id=3293
+
+## Code availability
+
+All the code needed to run this analysis is available [here](index.Rmd).
+
+This code makes use of following R packages:
+- raster: for raster data
+- sf: for spatial data
+- mapview: for interactive maps
+- ggplot2: for plots
+- data.table: for manipulation dataframes/tables
+- mregions: for standardize marine regions from http://www.marineregions.org
 
