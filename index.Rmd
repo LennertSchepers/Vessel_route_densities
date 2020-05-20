@@ -272,8 +272,7 @@ datatable(df.sr,
           rownames = FALSE) %>% formatRound(-1, 2)
 ```
 
-And this is the table in the 'long' format:
-```{r BCP_table_long, echo = FALSE}
+```{r BCP_table_long, echo = FALSE, eval = FALSE}
 datatable(df.sr.long,
           options = list(pageLength = 16),
           rownames = FALSE) %>% formatRound(3, 2)
@@ -371,7 +370,7 @@ r2020_0204 <- brick(c(
 ```
 
 ### Cargo 
-```{r}
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
 mapview(BCP, color = 'blue',
@@ -398,7 +397,7 @@ mapview(BCP, color = 'blue',
 ```
 
 ### Fishing 
-```{r}
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
 mapview(BCP, color = 'blue',
@@ -425,7 +424,7 @@ mapview(BCP, color = 'blue',
 ```
 
 ### Passenger 
-```{r}
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
 mapview(BCP, color = 'blue',
@@ -452,7 +451,7 @@ mapview(BCP, color = 'blue',
 ```
 
 ### Tanker 
-```{r}
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
 mapview(BCP, color = 'blue',
@@ -479,7 +478,7 @@ mapview(BCP, color = 'blue',
 ```
 
 ### Other 
-```{r}
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
 mapview(BCP, color = 'blue',
@@ -506,7 +505,7 @@ mapview(BCP, color = 'blue',
 ```
 
 ### All 
-```{r}
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
 mapview(BCP, color = 'blue',
@@ -535,7 +534,7 @@ mapview(BCP, color = 'blue',
 
 ## Anomaly maps
 
-## February - April 2019 compared to February - April 2020
+### February - April 2019 compared to February - April 2020
 Comparing the period February-April 2020 vs 2019:
 (the different layers are the different boat types)
 
@@ -579,6 +578,7 @@ mapview(BCP, color = 'blue',
 ```
 
 
+### Month-by-month comparisons 2019 vs 2020
 Comparing the month-by-month differences between 2020 vs 2019:
 (the map is the Fishing type example)
 
@@ -632,17 +632,187 @@ Anomaly_All <- brick(c(
 )
 )
 
-#Plot the example of all combined Fishing types
-mapview(Anomaly_Fishing,
+```
+
+### Cargo 
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Plot the monthtly anomaly maps for 2019 vs 2020
+
+mapview(BCP, color = 'blue',
+        alpha.regions = 0,
+        legend = FALSE,
+        label = NULL,
+        popup = NULL) +
+  mapview(WScheldt,
+          color = 'blue',
+          alpha.regions = 0,
+          legend = FALSE,
+          label = NULL,
+          popup = NULL) +
+  mapview(B3NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapview(B12NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapView(Anomaly_Cargo,
         col.regions = pal,
         at = c(-1000, -200, -100, -50, -25,
                25, 50, 100, 200, 1000)
-        ) +
-mapview(BCP, color = 'blue', alpha.regions = 0) +
-  mapview(B3NM) +
-  mapview(B12NM)
+        )
 ```
 
+### Fishing 
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Plot the monthtly anomaly maps for 2019 vs 2020
+
+mapview(BCP, color = 'blue',
+        alpha.regions = 0,
+        legend = FALSE,
+        label = NULL,
+        popup = NULL) +
+  mapview(WScheldt,
+          color = 'blue',
+          alpha.regions = 0,
+          legend = FALSE,
+          label = NULL,
+          popup = NULL) +
+  mapview(B3NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapview(B12NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapView(Anomaly_Fishing,
+        col.regions = pal,
+        at = c(-1000, -200, -100, -50, -25,
+               25, 50, 100, 200, 1000)
+        )
+```
+
+### Passenger 
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Plot the monthtly anomaly maps for 2019 vs 2020
+
+mapview(BCP, color = 'blue',
+        alpha.regions = 0,
+        legend = FALSE,
+        label = NULL,
+        popup = NULL) +
+  mapview(WScheldt,
+          color = 'blue',
+          alpha.regions = 0,
+          legend = FALSE,
+          label = NULL,
+          popup = NULL) +
+  mapview(B3NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapview(B12NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapView(Anomaly_Passenger,
+        col.regions = pal,
+        at = c(-1000, -200, -100, -50, -25,
+               25, 50, 100, 200, 1000)
+        )
+```
+
+### Tanker 
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Plot the monthtly anomaly maps for 2019 vs 2020
+
+mapview(BCP, color = 'blue',
+        alpha.regions = 0,
+        legend = FALSE,
+        label = NULL,
+        popup = NULL) +
+  mapview(WScheldt,
+          color = 'blue',
+          alpha.regions = 0,
+          legend = FALSE,
+          label = NULL,
+          popup = NULL) +
+  mapview(B3NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapview(B12NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapView(Anomaly_Tanker,
+        col.regions = pal,
+        at = c(-1000, -200, -100, -50, -25,
+               25, 50, 100, 200, 1000)
+        )
+```
+
+### Other 
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Plot the monthtly anomaly maps for 2019 vs 2020
+
+mapview(BCP, color = 'blue',
+        alpha.regions = 0,
+        legend = FALSE,
+        label = NULL,
+        popup = NULL) +
+  mapview(WScheldt,
+          color = 'blue',
+          alpha.regions = 0,
+          legend = FALSE,
+          label = NULL,
+          popup = NULL) +
+  mapview(B3NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapview(B12NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapView(Anomaly_Other,
+        col.regions = pal,
+        at = c(-1000, -200, -100, -50, -25,
+               25, 50, 100, 200, 1000)
+        )
+```
+
+### All 
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Plot the monthtly anomaly maps for 2019 vs 2020
+
+mapview(BCP, color = 'blue',
+        alpha.regions = 0,
+        legend = FALSE,
+        label = NULL,
+        popup = NULL) +
+  mapview(WScheldt,
+          color = 'blue',
+          alpha.regions = 0,
+          legend = FALSE,
+          label = NULL,
+          popup = NULL) +
+  mapview(B3NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapview(B12NM,
+          legend = FALSE, 
+          label = NULL,
+          popup = NULL) +
+  mapView(Anomaly_All,
+        col.regions = pal,
+        at = c(-1000, -200, -100, -50, -25,
+               25, 50, 100, 200, 1000)
+        )
+```
 
 ## Data availability
 
