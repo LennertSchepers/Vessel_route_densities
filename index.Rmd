@@ -256,14 +256,14 @@ We extract all data from all the cells, and calculate the average for the whole 
 ```
 This is an example of the data in 'wide' format
 
-```{r}
+```{r BCP_table_wide, echo = FALSE}
 datatable(df.sr,
           options = list(pageLength = 16),
           rownames = FALSE) %>% formatRound(-1, 2)
 ```
 
 And this is the table in the 'long' format:
-```{r}
+```{r BCP_table_long, echo = FALSE}
 datatable(df.sr.long,
           options = list(pageLength = 16),
           rownames = FALSE) %>% formatRound(3, 2)
@@ -304,7 +304,7 @@ ggplot(df.sr.long, aes(x = Date, y = value, group = variable)) +
 
 ```
 
-```{r}
+```{r Scheldt table, echo = FALSE}
 datatable(df.Scheldt,
           options = list(pageLength = 16),
           rownames = FALSE) %>% formatRound(-1, 2)
