@@ -6,6 +6,7 @@ output:
   html_document:
     toc: true
     toc_float: true
+    df_print: kable
 ---
 
 ```{r setup, include=FALSE}
@@ -34,11 +35,15 @@ library(sf)      # for spatial data
 library(mapview) # for interactive maps
 library(ggplot2) # for plots
 library(data.table) # for manipulation dataframes/tables
+library(DT)
 library(mregions)  # for standardize marine regions from http://www.marineregions.org
 ```
 
 For this exercise, we are only interested in Belgian waters, so we'll use bounding box of the Belgian Exclusive Economic ZOne:
 ```{r message = FALSE, warning = FALSE, echo = FALSE}
+# BCP <- mr_shp(key = "MarineRegions:eez",
+#                   filter = "Belgian Exclusive Economic Zone",
+#                   maxFeatures = 500) # needed for CRAN version, see https://github.com/ropensci/mregions/issues/48
 BCP <- st_read("http://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=eez&cql_filter=mrgid=%273293%27&outputFormat=application/json")
 # BCP <- st_cast(BCP, "POLYGON")
 BCP_bbox <- st_bbox(BCP$geometry)
@@ -98,7 +103,7 @@ getBelgianCSW <- function(year, month, vessel_code){
                 "format=image/tiff&",
                 "interpolation=nearest&resx=0.00833333&resy=0.00833333"
   )
-  raster(url)
+  x <- raster(url)
 }
 
 ```
@@ -249,6 +254,20 @@ We extract all data from all the cells, and calculate the average for the whole 
   df.sr.long <- melt.data.table(as.data.table(df.sr),
                                 id.vars = "Date")
 ```
+This is an example of the data in 'wide' format
+
+```{r}
+datatable(df.sr,
+          options = list(pageLength = 16),
+          rownames = FALSE) %>% formatRound(-1, 2)
+```
+
+And this is the table in the 'long' format:
+```{r}
+datatable(df.sr.long,
+          options = list(pageLength = 16),
+          rownames = FALSE) %>% formatRound(3, 2)
+```
 
 A plot of the result:
 
@@ -282,6 +301,7 @@ ggplot(df.sr.long, aes(x = Date, y = value, group = variable)) +
 # transform to long format:
   df.Scheldt.long <- melt.data.table(as.data.table(df.Scheldt),
                                 id.vars = "Date")
+  df.Scheldt.long
 ```
 
 A plot of the result:
@@ -350,6 +370,8 @@ mapview(c(crop(r2019_0204[['Fishing_2019_0204']], BCP),
 ### Scheldt maps 2019 vs 2020
 
 ```{r echo = FALSE}
+# first crop, then mask, see https://gis.stackexchange.com/a/61278/44980
+
 mapview(c(crop(r2019_0204[['Fishing_2019_0204']], WScheldt),
           crop(r2020_0204[['Fishing_2020_0204']], WScheldt))
         )
@@ -363,10 +385,10 @@ Comparing the period February-April 2020 vs 2019:
 
 
 ```{r echo = FALSE}
-anomaly_0204 <- r2020_0204 - r2019_0204
+anomaly_February_April <- r2020_0204 - r2019_0204
 
 pal <- grDevices::colorRampPalette(grDevices::hcl.colors(255, palette = "BrBG"))
-mapView(anomaly_0204,
+mapView(anomaly_February_April,
         col.regions = pal,
         at = c(-1000, -200, -100, -50, -25,
                25, 50, 100, 200, 1000)
@@ -381,50 +403,50 @@ Comparing the month-by-month differences between 2020 vs 2019:
 ```{r message = FALSE, warning = FALSE, echo = FALSE}
 # Anomaly map January-April 2020 - January-April 2019
 Anomaly_Cargo <- brick(c(
-  Anomaly_Cargo_01 = mean(Cargo[[13]] - Cargo[[1]]),
-  Anomaly_Cargo_02 = mean(Cargo[[14]] - Cargo[[2]]),
-  Anomaly_Cargo_03 = mean(Cargo[[15]] - Cargo[[3]]),
-  Anomaly_Cargo_04 = mean(Cargo[[16]] - Cargo[[4]])
+  Anomaly_Cargo_January = mean(Cargo[[13]] - Cargo[[1]]),
+  Anomaly_Cargo_February = mean(Cargo[[14]] - Cargo[[2]]),
+  Anomaly_Cargo_March = mean(Cargo[[15]] - Cargo[[3]]),
+  Anomaly_Cargo_April = mean(Cargo[[16]] - Cargo[[4]])
 )
 )
 
 Anomaly_Fishing <- brick(c(
-  Anomaly_Fishing_01 = mean(Fishing[[13]] - Fishing[[1]]),
-  Anomaly_Fishing_02 = mean(Fishing[[14]] - Fishing[[2]]),
-  Anomaly_Fishing_03 = mean(Fishing[[15]] - Fishing[[3]]),
-  Anomaly_Fishing_04 = mean(Fishing[[16]] - Fishing[[4]])
+  Anomaly_Fishing_January = mean(Fishing[[13]] - Fishing[[1]]),
+  Anomaly_Fishing_February = mean(Fishing[[14]] - Fishing[[2]]),
+  Anomaly_Fishing_March = mean(Fishing[[15]] - Fishing[[3]]),
+  Anomaly_Fishing_April = mean(Fishing[[16]] - Fishing[[4]])
 )
 )
 
 Anomaly_Passenger <- brick(c(
-  Anomaly_Passenger_01 = mean(Passenger[[13]] - Passenger[[1]]),
-  Anomaly_Passenger_02 = mean(Passenger[[14]] - Passenger[[2]]),
-  Anomaly_Passenger_03 = mean(Passenger[[15]] - Passenger[[3]]),
-  Anomaly_Passenger_04 = mean(Passenger[[16]] - Passenger[[4]])
+  Anomaly_Passenger_January = mean(Passenger[[13]] - Passenger[[1]]),
+  Anomaly_Passenger_February = mean(Passenger[[14]] - Passenger[[2]]),
+  Anomaly_Passenger_March = mean(Passenger[[15]] - Passenger[[3]]),
+  Anomaly_Passenger_April = mean(Passenger[[16]] - Passenger[[4]])
 )
 )
 
 Anomaly_Tanker <- brick(c(
-  Anomaly_Tanker_01 = mean(Tanker[[13]] - Tanker[[1]]),
-  Anomaly_Tanker_02 = mean(Tanker[[14]] - Tanker[[2]]),
-  Anomaly_Tanker_03 = mean(Tanker[[15]] - Tanker[[3]]),
-  Anomaly_Tanker_04 = mean(Tanker[[16]] - Tanker[[4]])
+  Anomaly_Tanker_January = mean(Tanker[[13]] - Tanker[[1]]),
+  Anomaly_Tanker_February = mean(Tanker[[14]] - Tanker[[2]]),
+  Anomaly_Tanker_March = mean(Tanker[[15]] - Tanker[[3]]),
+  Anomaly_Tanker_April = mean(Tanker[[16]] - Tanker[[4]])
 )
 )
 
 Anomaly_Other <- brick(c(
-  Anomaly_Other_01 = mean(Other[[13]] - Other[[1]]),
-  Anomaly_Other_02 = mean(Other[[14]] - Other[[2]]),
-  Anomaly_Other_03 = mean(Other[[15]] - Other[[3]]),
-  Anomaly_Other_04 = mean(Other[[16]] - Other[[4]])
+  Anomaly_Other_January = mean(Other[[13]] - Other[[1]]),
+  Anomaly_Other_February = mean(Other[[14]] - Other[[2]]),
+  Anomaly_Other_March = mean(Other[[15]] - Other[[3]]),
+  Anomaly_Other_April = mean(Other[[16]] - Other[[4]])
 )
 )
 
 Anomaly_All <- brick(c(
-  Anomaly_All_01 = mean(All[[13]] - All[[1]]),
-  Anomaly_All_02 = mean(All[[14]] - All[[2]]),
-  Anomaly_All_03 = mean(All[[15]] - All[[3]]),
-  Anomaly_All_04 = mean(All[[16]] - All[[4]])
+  Anomaly_All_January = mean(All[[13]] - All[[1]]),
+  Anomaly_All_February = mean(All[[14]] - All[[2]]),
+  Anomaly_All_March = mean(All[[15]] - All[[3]]),
+  Anomaly_All_April = mean(All[[16]] - All[[4]])
 )
 )
 
