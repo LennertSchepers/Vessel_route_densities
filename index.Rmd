@@ -301,8 +301,15 @@ ggplot(df.sr.long, aes(x = Date, y = value, group = variable)) +
 # transform to long format:
   df.Scheldt.long <- melt.data.table(as.data.table(df.Scheldt),
                                 id.vars = "Date")
-  df.Scheldt.long
+
 ```
+
+```{r}
+datatable(df.Scheldt,
+          options = list(pageLength = 16),
+          rownames = FALSE) %>% formatRound(-1, 2)
+```
+
 
 A plot of the result:
 
