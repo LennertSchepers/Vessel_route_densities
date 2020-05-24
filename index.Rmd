@@ -58,7 +58,9 @@ mapview(BCP, color = 'blue', alpha.regions = 0) +
   mapview(B3NM) +
   mapview(B12NM)
 
-
+st_write(B3NM, file.path('data', 'B3NM.gpkg'), delete_layer = TRUE)
+st_write(B12NM, file.path('data', 'B12NM.gpkg'), delete_layer = TRUE)
+st_write(BCP, file.path('data', 'BCP.gpkg'), delete_layer = TRUE)
 ```
 
 For the Scheldt Estuary:
@@ -68,6 +70,8 @@ WScheldt_bbox <- st_bbox(WScheldt$geometry)
 mapview(WScheldt)
 
 bbox_BCP_Sch <- st_bbox(st_union(BCP,WScheldt))
+
+st_write(WScheldt, file.path('data', 'WScheldt.gpkg'), delete_layer = TRUE)
 
 ```
 
@@ -239,7 +243,28 @@ All <- brick(x = c('All-2019-01' = getBelgianCSW(2019, 1, "All"),
                    'All-2020-04' = getBelgianCSW(2020, 4, "All")
 )
 )
+
 ```
+
+```{r writeraster, message = FALSE, warning = FALSE, echo = FALSE}
+if (!dir.exists("output")) dir.create("output")
+
+names <- c('Cargo', 'Fishing', 'Passenger', 'Tanker', 'Other', 'All')
+bricks <- c(Cargo, Fishing, Passenger, Tanker, Other, All)
+
+lapply(bricks,
+       function(x){
+          writeRaster(x,
+                      gsub('\\.','_',file.path('output', names(x))),
+                      format = "GTiff",
+                      bylayer = TRUE,
+                      overwrite = TRUE)
+       }
+)
+
+```
+
+
 
 ### Belgian EEZ:
 
@@ -283,12 +308,14 @@ A plot of the result:
 ```{r plot, message = FALSE, warning = FALSE, echo = FALSE}
 
 ggplot(df.sr.long, aes(x = Date, y = value, group = variable)) +
-  geom_point(aes(color = variable)) +
+  geom_point(aes(color = variable, shape = variable)) +
   geom_line(aes(color = variable)) +
   labs(title = "Vessel route densities in the Belgian part of the North Sea",
        subtitle = "Monthly average route density (routes/km²/ship type) for the Belgian EEZ",
        x = "Month",
-       y = "Average routes / km² / ship type") +
+       y = "Average routes / km² / ship type",
+       color = "Ship type",
+       shape = "Ship type") +
   theme_minimal()
 ```
 
@@ -325,12 +352,14 @@ A plot of the result:
 ```{r Schelde_plot, message = FALSE, warning = FALSE, echo = FALSE}
 
 ggplot(df.Scheldt.long, aes(x = Date, y = value, group = variable)) +
-  geom_point(aes(color = variable)) +
+  geom_point(aes(color = variable, shape = variable)) +
   geom_line(aes(color = variable)) +
   labs(title = "Vessel route densities in the Western Scheldt",
        subtitle = "Monthly average route density (routes/km²/ship type) in the Western Scheldt",
        x = "Month",
-       y = "Average routes / km² / ship type") +
+       y = "Average routes / km² / ship type",
+       color = "Ship type",
+       shape = "Ship type") +
   theme_minimal()
 ```
 
@@ -367,13 +396,23 @@ r2020_0204 <- brick(c(
   All_2020_0204 = mean(All[[14:16]])
 )
 )
+
+
+lapply(list(r2019_0204,r2020_0204),
+       function(x){
+          writeRaster(x,
+                      gsub('\\.','_',file.path('output', names(x))),
+                      format = "GTiff",
+                      bylayer = TRUE,
+                      overwrite = TRUE)
+       }
+)
+
 ```
 
-### Cargo 
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-# Plot the February - April Fishing maps for 2019 and 2020
-
-mapview(BCP, color = 'blue',
+```{r mapviewpolygons, message = FALSE, warning = FALSE, echo = FALSE}
+mapviewpolygons <- 
+  mapview(BCP, color = 'blue',
         alpha.regions = 0,
         legend = FALSE,
         label = NULL,
@@ -391,34 +430,26 @@ mapview(BCP, color = 'blue',
   mapview(B12NM,
           legend = FALSE, 
           label = NULL,
-          popup = NULL) +
+          popup = NULL)
+
+```
+
+
+### Cargo 
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Plot the February - April Fishing maps for 2019 and 2020
+
+mapviewpolygons +
   mapview(r2019_0204$Cargo_2019_0204) + 
-  mapview(r2020_0204$Cargo_2020_0204)
+  mapview(r2020_0204$Cargo_2020_0204) 
+
 ```
 
 ### Fishing 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapview(r2019_0204$Fishing_2019_0204) + 
   mapview(r2020_0204$Fishing_2020_0204)
 ```
@@ -426,26 +457,7 @@ mapview(BCP, color = 'blue',
 ### Passenger 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
-
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapview(r2019_0204$Passenger_2019_0204) + 
   mapview(r2020_0204$Passenger_2020_0204)
 ```
@@ -453,26 +465,7 @@ mapview(BCP, color = 'blue',
 ### Tanker 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
-
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapview(r2019_0204$Tanker_2019_0204) + 
   mapview(r2020_0204$Tanker_2020_0204)
 ```
@@ -481,25 +474,7 @@ mapview(BCP, color = 'blue',
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapview(r2019_0204$Other_2019_0204) + 
   mapview(r2020_0204$Other_2020_0204)
 ```
@@ -508,25 +483,7 @@ mapview(BCP, color = 'blue',
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapview(r2019_0204$All_2019_0204) + 
   mapview(r2020_0204$All_2020_0204)
 ```
@@ -541,34 +498,22 @@ Comparing the period February-April 2020 vs 2019:
 
 ```{r echo = FALSE}
 anomaly_February_April <- r2020_0204 - r2019_0204
-names(anomaly_February_April) <- c("Anomaly_Cargo_2019_2020",
-                                   "Anomaly_Fishing_2019_2020",
-                                   "Anomaly_Passenger_2019_2020",
-                                   "Anomaly_Tanker_2019_2020",
-                                   "Anomaly_Other_2019_2020",
-                                   "Anomaly_All_2019_2020") 
+names(anomaly_February_April) <- c("Anomaly_Cargo_Feb_Apr_2019_2020",
+                                   "Anomaly_Fishing_Feb_Apr_2019_2020",
+                                   "Anomaly_Passenger_Feb_Apr_2019_2020",
+                                   "Anomaly_Tanker_Feb_Apr_2019_2020",
+                                   "Anomaly_Other_Feb_Apr_2019_2020",
+                                   "Anomaly_All_Feb_Apr_2019_2020") 
+writeRaster(anomaly_February_April,
+            gsub('\\.','_',file.path('output', names(anomaly_February_April))),
+            format = "GTiff",
+            bylayer = TRUE,
+            overwrite = TRUE)
+
 
 pal <- grDevices::colorRampPalette(grDevices::hcl.colors(255, palette = "BrBG"))
 
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapView(anomaly_February_April,
         col.regions = pal,
         at = c(-1000, -200, -100, -50, -25,
@@ -632,31 +577,26 @@ Anomaly_All <- brick(c(
 )
 )
 
+
+lapply(list(Anomaly_Cargo, Anomaly_Fishing, Anomaly_Passenger,
+            Anomaly_Tanker, Anomaly_Other, Anomaly_All
+            ),
+       function(x){
+          writeRaster(x,
+                      gsub('\\.','_',file.path('output', names(x))),
+                      format = "GTiff",
+                      bylayer = TRUE,
+                      overwrite = TRUE)
+       }
+)
+
+
 ```
 
 ### Cargo 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
-
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapView(Anomaly_Cargo,
         col.regions = pal,
         at = c(-1000, -200, -100, -50, -25,
@@ -667,26 +607,7 @@ mapview(BCP, color = 'blue',
 ### Fishing 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
-
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapView(Anomaly_Fishing,
         col.regions = pal,
         at = c(-1000, -200, -100, -50, -25,
@@ -697,26 +618,7 @@ mapview(BCP, color = 'blue',
 ### Passenger 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
-
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapView(Anomaly_Passenger,
         col.regions = pal,
         at = c(-1000, -200, -100, -50, -25,
@@ -727,26 +629,7 @@ mapview(BCP, color = 'blue',
 ### Tanker 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
-
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapView(Anomaly_Tanker,
         col.regions = pal,
         at = c(-1000, -200, -100, -50, -25,
@@ -757,26 +640,7 @@ mapview(BCP, color = 'blue',
 ### Other 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
-
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapView(Anomaly_Other,
         col.regions = pal,
         at = c(-1000, -200, -100, -50, -25,
@@ -787,32 +651,78 @@ mapview(BCP, color = 'blue',
 ### All 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
-
-mapview(BCP, color = 'blue',
-        alpha.regions = 0,
-        legend = FALSE,
-        label = NULL,
-        popup = NULL) +
-  mapview(WScheldt,
-          color = 'blue',
-          alpha.regions = 0,
-          legend = FALSE,
-          label = NULL,
-          popup = NULL) +
-  mapview(B3NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
-  mapview(B12NM,
-          legend = FALSE, 
-          label = NULL,
-          popup = NULL) +
+mapviewpolygons +
   mapView(Anomaly_All,
         col.regions = pal,
         at = c(-1000, -200, -100, -50, -25,
                25, 50, 100, 200, 1000)
         )
 ```
+
+## Additional analyses
+
+### Passengers excluding wind farm
+
+There is quite some traffic to the windfarms that are classified as 'Passenger' traffic.
+As this might be confusing, we will exclude this from the analysis.
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+passenger_windfarm <- st_read('data/passenger_windfarm.gpkg')
+
+mapviewpolygons +
+  mapview(passenger_windfarm) +
+  mapview(Anomaly_Passenger,
+        col.regions = pal,
+        at = c(-1000, -200, -100, -50, -25,
+               25, 50, 100, 200, 1000)
+        )
+
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+
+BCP_no_windfarm <- st_difference(BCP, passenger_windfarm)
+
+df.sr$Pass_no_windfarm <- as.vector(extract(Passenger, BCP_no_windfarm, fun = mean))
+
+df.sr.pass <- df.sr[c('Date','Passenger','Pass_no_windfarm')]
+
+# transform to long format:
+  df.sr.pass.long <- melt.data.table(as.data.table(df.sr.pass),
+                                id.vars = "Date")
+
+
+```
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+datatable(df.sr.pass,
+          options = list(pageLength = 16),
+          rownames = FALSE) %>% formatRound(-1, 2)
+
+ggplot(df.sr.pass.long, aes(x = Date, y = value, group = variable)) +
+  geom_point(aes(color = variable, shape = variable)) +
+  geom_line(aes(color = variable)) +
+  labs(title = "Passenger route densities in the Belgian part of the North Sea",
+       subtitle = "Monthly average route density (routes/km²/ship type) for the Belgian EEZ",
+       x = "Month",
+       y = "Average routes / km² / ship type",
+       color = "Ship type",
+       shape = "Ship type") +
+  theme_minimal()
+
+```
+
+### Fishing within 3 NM, 3-12NM and >12NM zone.
+
+work in progress
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE, eval= FALSE}
+# extended the lines of 3 and 12 NM a bit
+B3NM_edited <- st_read('data/B3NM_edited.gpkg')
+B12NM_edited <- st_read('data/B12NM_edited.gpkg')
+
+```
+
 
 ## Data availability
 
@@ -831,10 +741,12 @@ The more information about the polygons used in this exercise:
 All the code needed to run this analysis is available [here](index.Rmd).
 
 This code makes use of following R packages:
+
 - raster: for raster data
 - sf: for spatial data
 - mapview: for interactive maps
 - ggplot2: for plots
 - data.table: for manipulation dataframes/tables
+- DT: for visualisation of the data tables
 - mregions: for standardize marine regions from http://www.marineregions.org
 

@@ -1,0 +1,12 @@
+# hex colors used in the anomaly maps: (or the 'BrBG' color map')
+"#533600"
+"#976C00"
+"#D1A358"
+"#F2D4B0"
+"#F6F6F6"
+"#B8DED9"
+"#67B2A9"
+"#007B70"
+"#003D34"
+
+# hex colors used in other raster layers are by default from the 'viridis inferno' color scale: viridisLite::inferno
