@@ -41,8 +41,8 @@ library(DT)
 library(mregions)  # for standardize marine regions from http://www.marineregions.org
 ```
 
-For this exercise, we are only interested in Belgian waters, so we'll use bounding box of the Belgian Exclusive Economic ZOne:
-```{r message = FALSE, warning = FALSE, echo = FALSE}
+The focus of this exercise is the Belgian waters (the Belgian Exclusive Economic Zone) and the Western Scheldt
+```{r message = FALSE, warning = FALSE, echo = FALSE, results = 'hide'}
 # BCP <- mr_shp(key = "MarineRegions:eez",
 #                   filter = "Belgian Exclusive Economic Zone",
 #                   maxFeatures = 500) # needed for CRAN version, see https://github.com/ropensci/mregions/issues/48
@@ -65,11 +65,10 @@ st_write(B12NM, file.path('data', 'B12NM.gpkg'), delete_layer = TRUE)
 st_write(BCP, file.path('data', 'BCP.gpkg'), delete_layer = TRUE)
 ```
 
-For the Scheldt Estuary:
-```{r message = FALSE, warning = FALSE, echo = FALSE}
+```{r message = FALSE, warning = FALSE, echo = FALSE, results = 'hide'}
 WScheldt <- st_read("http://geo.vliz.be/geoserver/wfs?request=getfeature&service=wfs&version=1.1.0&typename=MarineRegions:seavox_v16&outputformat=json&filter=%3CPropertyIsEqualTo%3E%3CPropertyName%3Esub_region%3C%2FPropertyName%3E%3CLiteral%3EWESTERN+SCHELDT%3C%2FLiteral%3E%3C%2FPropertyIsEqualTo%3E")
 WScheldt_bbox <- st_bbox(WScheldt$geometry)
-mapview(WScheldt)
+#mapview(WScheldt)
 
 bbox_BCP_Sch <- st_bbox(st_union(BCP,WScheldt))
 
@@ -124,7 +123,7 @@ getBelgianCSW <- function(year, month, vessel_code){
 
 ```
 
-Now we extract the Vessel density data, for example here for the Fishing map of January 2019:
+We extract the Vessel density data, for example here for the Fishing map of January 2019:
 
 ```{r get_WCS_data, message = FALSE, warning = FALSE, echo = FALSE}
 # extract vessel density data and store it in a rasterbrick:
@@ -718,27 +717,27 @@ ggplot(df.sr.pass.long, aes(x = Date, y = value, group = variable)) +
 
 ```
 
-### Fishing within 3 NM, 3-12NM and >12NM zone.
+### Fishing zones.
 
-work in progress
+In this part we'll look how much is being fished in the different zones:
 
 ```{r,  message = FALSE, warning = FALSE, echo = FALSE}
 # extended the lines of 3 and 12 NM a bit
-BCP_split <- st_read('data/eez_be_poly_split.gpkg')
-
+BCP_zones <- st_read('data/eez_be_poly_split.gpkg', quiet = TRUE)
+BCP_zones$name <- c(">12 NM", "0-3 NM", "3-12 NM")
+mapview(BCP_zones)
 
 #feb-apr20 vs feb-apr19 Fishing
-numberofcells <- extract(Fishing, BCP_split,
+numberofcells <- extract(Fishing, BCP_zones,
                          fun = function(x, ...) length(x),
                          df = TRUE)
 
-df.Fishing.zones <- extract(Fishing, BCP_split, fun = mean, df = TRUE)
+df.Fishing.zones <- extract(Fishing, BCP_zones, fun = mean, df = TRUE)
 df.Fishing.zones <- transpose(df.Fishing.zones[-1])
-colnames(df.Fishing.zones) <- BCP_split$name
+colnames(df.Fishing.zones) <- BCP_zones$name
 df.Fishing.zones$Date <- seq(as.Date("2019/1/1"), by = "month", length.out = 16)
 
-df.Fishing.zones <- df.Fishing.zones[c("Date", "0_3nm", "3nm_12nm", "12nm_bcp" )]
-colnames(df.Fishing.zones) <- c("Date", "0-3 NM", "3-12 NM", ">12 NM" )
+df.Fishing.zones <- df.Fishing.zones[c("Date",  "0-3 NM", "3-12 NM", ">12 NM")]
 
 # transform to long format:
   df.Fishing.zones.long <- melt.data.table(as.data.table(df.Fishing.zones),
@@ -774,7 +773,7 @@ The data from this exercise is freely available at the [EMODnet Human activities
 The vessel densities used in this exercise is provided by the European Maritime Safety Agency (EMSA) to EMODnet human activities and available [here](https://www.emodnet-humanactivities.eu/search-results.php?dataname=Vessel+Density+).
 
 - *Maritime boundaries*
-The maritime boundaries used in this exercise are from [MarineRegions.org](http://www.marineRegions.org). MarineRegions.org maintains a standard, relational list of geographic names coupled with information and maps of the geographic location of these features. This improves access and clarity of the different geographic, marine names and allows an improved linking of these locations to databases. Marine Regions is part of the [LifeWatch.be Species Information Backbone](http://www.lifewatch.be/), funded by the [Research Foundation - Flanders](https://www.fwo.be/en/).
+The maritime boundaries used in this exercise are from [MarineRegions.org](http://www.marineRegions.org). MarineRegions.org maintains a standard, relational list of geographic names coupled with information and maps of the geographic location of these features. This improves access and clarity of the different geographic, marine names and allows an improved linking of these locations to databases. Marine Regions is devloped by Flanders Marine Institute (VLIZ) as part of the Flemish contribution to [LifeWatch](http://www.lifewatch.be/), funded by [Research Foundation - Flanders](https://www.fwo.be/en/).
 The more information about the polygons used in this exercise:
   - the Western Scheldt: http://marineregions.org/gazetteer.php?p=details&id=4752
   - the Belgian Exclusive Economic Zone: http://marineregions.org/gazetteer.php?p=details&id=3293
