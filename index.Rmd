@@ -252,7 +252,7 @@ if (!dir.exists("output")) dir.create("output")
 names <- c('Cargo', 'Fishing', 'Passenger', 'Tanker', 'Other', 'All')
 bricks <- c(Cargo, Fishing, Passenger, Tanker, Other, All)
 
-lapply(bricks,
+l <- lapply(bricks,
        function(x){
           writeRaster(x,
                       gsub('\\.','_',file.path('output', names(x))),
@@ -398,7 +398,7 @@ r2020_0204 <- brick(c(
 )
 
 
-lapply(list(r2019_0204,r2020_0204),
+l <- lapply(list(r2019_0204,r2020_0204),
        function(x){
           writeRaster(x,
                       gsub('\\.','_',file.path('output', names(x))),
@@ -578,7 +578,7 @@ Anomaly_All <- brick(c(
 )
 
 
-lapply(list(Anomaly_Cargo, Anomaly_Fishing, Anomaly_Passenger,
+l <- lapply(list(Anomaly_Cargo, Anomaly_Fishing, Anomaly_Passenger,
             Anomaly_Tanker, Anomaly_Other, Anomaly_All
             ),
        function(x){
@@ -716,10 +716,47 @@ ggplot(df.sr.pass.long, aes(x = Date, y = value, group = variable)) +
 
 work in progress
 
-```{r,  message = FALSE, warning = FALSE, echo = FALSE, eval= FALSE}
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
 # extended the lines of 3 and 12 NM a bit
-B3NM_edited <- st_read('data/B3NM_edited.gpkg')
-B12NM_edited <- st_read('data/B12NM_edited.gpkg')
+BCP_split <- st_read('data/eez_be_poly_split.gpkg')
+
+
+#feb-apr20 vs feb-apr19 Fishing
+numberofcells <- extract(Fishing, BCP_split,
+                         fun = function(x, ...) length(x),
+                         df = TRUE)
+
+df.Fishing.zones <- extract(Fishing, BCP_split, fun = mean, df = TRUE)
+df.Fishing.zones <- transpose(df.Fishing.zones[-1])
+colnames(df.Fishing.zones) <- BCP_split$name
+df.Fishing.zones$Date <- seq(as.Date("2019/1/1"), by = "month", length.out = 16)
+
+df.Fishing.zones <- df.Fishing.zones[c("Date", "0_3nm", "3nm_12nm", "12nm_bcp" )]
+colnames(df.Fishing.zones) <- c("Date", "0-3 NM", "3-12 NM", ">12 NM" )
+
+# transform to long format:
+  df.Fishing.zones.long <- melt.data.table(as.data.table(df.Fishing.zones),
+                                id.vars = "Date")
+
+
+```
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+datatable(df.Fishing.zones,
+          options = list(pageLength = 16),
+          rownames = FALSE) %>% formatRound(-1, 2)
+
+ggplot(df.Fishing.zones.long, aes(x = Date, y = value, group = variable)) +
+  geom_point(aes(color = variable, shape = variable)) +
+  geom_line(aes(color = variable)) +
+  labs(title = "Fishing route densities in the Belgian part of the North Sea",
+       subtitle = "Monthly average route density (routes/km²/ship type) for the Belgian EEZ",
+       x = "Month",
+       y = "Average routes / km² / ship type",
+       color = "zone",
+       shape = "zone") +
+  theme_minimal()
+
 
 ```
 
