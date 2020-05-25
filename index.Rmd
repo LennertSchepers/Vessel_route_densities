@@ -1,12 +1,14 @@
 ---
 title: "Impact of Covid-19 on Vessel densities in the Belgian Part of the North Sea"
-author: "Lennert Schepers"
-date: "2020-05-17"
+author: "Lennert Schepers, Flanders Marine Data Centre (VMDC), VLIZ"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output:
   html_document:
     toc: true
     toc_float: true
     df_print: kable
+    fig_width: 9
+    fig_height: 6
 ---
 
 ```{r setup, include=FALSE}
@@ -122,7 +124,7 @@ getBelgianCSW <- function(year, month, vessel_code){
 
 ```
 
-Now we extract the Vessel density data, for example here for the Fhishing map of January 2019:
+Now we extract the Vessel density data, for example here for the Fishing map of January 2019:
 
 ```{r get_WCS_data, message = FALSE, warning = FALSE, echo = FALSE}
 # extract vessel density data and store it in a rasterbrick:
@@ -416,21 +418,25 @@ mapviewpolygons <-
         alpha.regions = 0,
         legend = FALSE,
         label = NULL,
-        popup = NULL) +
+        popup = NULL,
+        homebutton = FALSE) +
   mapview(WScheldt,
           color = 'blue',
           alpha.regions = 0,
           legend = FALSE,
           label = NULL,
-          popup = NULL) +
+          popup = NULL,
+        homebutton = FALSE) +
   mapview(B3NM,
           legend = FALSE, 
           label = NULL,
-          popup = NULL) +
+          popup = NULL,
+        homebutton = FALSE) +
   mapview(B12NM,
           legend = FALSE, 
           label = NULL,
-          popup = NULL)
+          popup = NULL,
+        homebutton = FALSE)
 
 ```
 
@@ -768,7 +774,7 @@ The data from this exercise is freely available at the [EMODnet Human activities
 The vessel densities used in this exercise is provided by the European Maritime Safety Agency (EMSA) to EMODnet human activities and available [here](https://www.emodnet-humanactivities.eu/search-results.php?dataname=Vessel+Density+).
 
 - *Maritime boundaries*
-The maritime boundaries used in this exercise are from [MarineRegions.org](http://www.marineRegions.org). MarineRegions.org maintains a standard, relational list of geographic names coupled with information and maps of the geographic location of these features. This improves access and clarity of the different geographic, marine names and allows an improved linking of these locations to databases.
+The maritime boundaries used in this exercise are from [MarineRegions.org](http://www.marineRegions.org). MarineRegions.org maintains a standard, relational list of geographic names coupled with information and maps of the geographic location of these features. This improves access and clarity of the different geographic, marine names and allows an improved linking of these locations to databases. Marine Regions is part of the [LifeWatch.be Species Information Backbone](http://www.lifewatch.be/), funded by the [Research Foundation - Flanders](https://www.fwo.be/en/).
 The more information about the polygons used in this exercise:
   - the Western Scheldt: http://marineregions.org/gazetteer.php?p=details&id=4752
   - the Belgian Exclusive Economic Zone: http://marineregions.org/gazetteer.php?p=details&id=3293
