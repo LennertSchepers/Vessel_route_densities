@@ -1,6 +1,6 @@
 ---
 title: "Impact of Covid-19 on Vessel densities in the Belgian Part of the North Sea"
-author: "Lennert Schepers, Flanders Marine Data Centre (VMDC), VLIZ"
+author: "Analysis by Flanders Marine Data Centre (VMDC), VLIZ"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output:
   html_document:
@@ -19,7 +19,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 In this exercise we want to analyse the impact of COVID-19 on vessel densities in the Belgian Part of the North Sea and the Western Scheldt.
 There are different ways to calculate vessel densities, therefore we first start with some background information on two different types of vessel densities and where this data can be found.
-The data and code of this analysis if freely available, see the 'Data availability' and 'Code availability' sections at the end of this document.
+The data and code of this analysis are freely available, see the 'Data availability' and 'Code availability' sections at the end of this document.
+This analysis is used in following policy information note (BIN) from Flanders Marine Institute:
+http://www.vliz.be/nl/catalogus?module=ref&refid=324473
+
 
 ## Vessel densities
 
@@ -82,31 +85,8 @@ st_write(WScheldt, file.path('data', 'WScheldt.gpkg'), delete_layer = TRUE)
 ```{r WCS function, message = FALSE, warning = FALSE, echo = FALSE}
 # Now, we create a function to retrieve the route density for a particular fishing type, month and year *in Belgian waters*
 
-base_url <- 'https://ows.emodnet-humanactivities.eu/wcs?SERVICE=WCS&VERSION=1.0.0&request=GetCapabilities'
-
 # BACKGROUND INFO ON EMODNet Human Activities' WCS Service, and the 'route density maps'
-    # The Open Geospatial Consortium (OGC) Web Coverage Service Interface Standard (WCS) defines Web-based retrieval of coverages – that is, digital geospatial information representing space/time-varying phenomena.
-    #
-    # Get Capabilities:
-    #   https://ows.emodnet-humanactivities.eu/wcs?SERVICE=WCS&VERSION=1.0.0&request=GetCapabilities
-    #
-    # Get Coverage Example:
-    #   https://ows.emodnet-humanactivities.eu/wcs?service=wcs&version=1.0.0&request=getcoverage&coverage=emodnet:2019_01_rd_All&crs=EPSG:4326&BBOX=15,20.5,30,32.5&format=image/tiff&interpolation=nearest&resx=0.00833333&resy=0.00833333
-    #
-    # The names of the web service layers are -
-    #   '<year>_<month>_rd_<vessel code>' Eg. '2019_01_rd_All' for all vessels during January 2019
-    # '<year>_<season>_rd_<vessel code>' Eg. '2019_spring_rd_All' for all vessels during Spring 2019
-    # '<year>_yearly_rd_<vessel code>' Eg. '2019_yearly_rd_All' for the total of all vessels during 2019.
-    # The vessel codes are as follows:
-    #
-    # All - All types
-    # 01 - Cargo
-    # 02 - Fishing
-    # 03 - Passenger
-    # 04 - Tanker
-    # 05 - Other
-    #
-    #Available data: January 2019 - March 2020
+# GO to https://www.emodnet-humanactivities.eu/search-results.php?dataname=Vessel+Density+
 
 # function to get belgian raster data, based on year, month, vessel_code
 getBelgianCSW <- function(year, month, vessel_code){
@@ -672,7 +652,7 @@ There is quite some traffic to the windfarms that are classified as 'Passenger' 
 As this might be confusing, we will exclude this from the analysis.
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-passenger_windfarm <- st_read('data/passenger_windfarm.gpkg')
+passenger_windfarm <- st_read('data/passenger_windfarm.gpkg', quiet = TRUE)
 
 mapviewpolygons +
   mapview(passenger_windfarm) +
@@ -769,11 +749,11 @@ ggplot(df.Fishing.zones.long, aes(x = Date, y = value, group = variable)) +
 ## Data availability
 
 - *Vessel densities*
-The data from this exercise is freely available at the [EMODnet Human activities](https://www.emodnet-humanactivities.eu/) portal. [EMODnet](https://www.emodnet.eu/) stands for the European Marine Observation and Data Network, EMODnet is a network of organisations that are collecting, standardizing and making European marine data and data products freely available, supported by EU's integrated marine policy.
-The vessel densities used in this exercise is provided by the European Maritime Safety Agency (EMSA) to EMODnet human activities and available [here](https://www.emodnet-humanactivities.eu/search-results.php?dataname=Vessel+Density+).
+The data from this exercise is freely available at the [EMODnet Human activities](https://www.emodnet-humanactivities.eu/) portal. [EMODnet](https://www.emodnet.eu/) stands for the European Marine Observation and Data Network and is a network of organisations that are collecting and standardizing European marine data, and making those data products freely available, supported by EU's integrated marine policy.
+The vessel densities data used in this exercise are provided by the European Maritime Safety Agency (EMSA) to EMODnet human activities and are available [here](https://www.emodnet-humanactivities.eu/search-results.php?dataname=Vessel+Density+).
 
 - *Maritime boundaries*
-The maritime boundaries used in this exercise are from [MarineRegions.org](http://www.marineRegions.org). MarineRegions.org maintains a standard, relational list of geographic names coupled with information and maps of the geographic location of these features. This improves access and clarity of the different geographic, marine names and allows an improved linking of these locations to databases. Marine Regions is devloped by Flanders Marine Institute (VLIZ) as part of the Flemish contribution to [LifeWatch](http://www.lifewatch.be/), funded by [Research Foundation - Flanders](https://www.fwo.be/en/).
+The maritime boundaries used in this exercise are from [MarineRegions.org](http://www.marineRegions.org). MarineRegions.org maintains a standard, relational list of geographic names coupled with information and maps of the geographic location of these features. This improves access and clarity of the different geographic, marine names and allows an improved linking of these locations to databases. Marine Regions is developed by Flanders Marine Institute (VLIZ) as part of the Flemish contribution to [LifeWatch](http://www.lifewatch.be/), funded by [Research Foundation - Flanders](https://www.fwo.be/en/).
 The more information about the polygons used in this exercise:
   - the Western Scheldt: http://marineregions.org/gazetteer.php?p=details&id=4752
   - the Belgian Exclusive Economic Zone: http://marineregions.org/gazetteer.php?p=details&id=3293
