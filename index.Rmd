@@ -19,18 +19,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 In this exercise we want to analyse the impact of COVID-19 on vessel densities in the Belgian Part of the North Sea and the Western Scheldt.
 There are different ways to calculate vessel densities, therefore we first start with some background information on two different types of vessel densities and where this data can be found.
-The data and code of this analysis are freely available, see the 'Data availability' and 'Code availability' sections at the end of this document.
+The data and code of this analysis are freely available, see the 'Data availability' and 'Code availability' sections at the end of this document. You can even reproduce the full analysis or modify parts of it, see the 'reproducibility' section.
+
 This analysis is used in following policy information note (BIN) from Flanders Marine Institute:
 http://www.vliz.be/nl/catalogus?module=ref&refid=324473
 
 
 ## Vessel densities
 
-In this small exercise we want to analyse vessel route densities in the Belgian part of the North Sea.
+In this exercise we want to analyse vessel route densities in the Belgian part of the North Sea.
 The data for this exercise comes from [EMODnet Human activities](https://www.emodnet-humanactivities.eu/).
 EMODnet Human Activities has two types of vessel density data, one created by the Human Activities portal themselves, giving the vessel hours per square km per month by ship type. See [here](https://www.emodnet-humanactivities.eu/search-results.php?dataname=Vessel+Density+).
 
-And one created by the European Maritime Safety Agency (EMSA), giving the number of routes per square km per month) by ship type. The advantage of the latter is that this provides recent information. For example, writing now 28th of April, the monthly aggregated data is already available for March 2020. For details, see [here](https://www.emodnet-humanactivities.eu/search-results.php?dataname=Route+density+%28source%3A+EMSA%29) 
+And one created by the European Maritime Safety Agency (EMSA), giving the number of routes per square km per month) by ship type. The advantage of the latter is that this provides recent information, montly data is available with only 2-3 weeks delay.For details, see [here](https://www.emodnet-humanactivities.eu/search-results.php?dataname=Route+density+%28source%3A+EMSA%29). We will use the EMSA dataset in the next sections.
+
+All units are **number of routes / km² / ship type**
 
 
 ```{r libs, message = FALSE, warning = FALSE, echo = FALSE}
@@ -44,7 +47,7 @@ library(DT)
 library(mregions)  # for standardize marine regions from http://www.marineregions.org
 ```
 
-The focus of this exercise is the Belgian waters (the Belgian Exclusive Economic Zone) and the Western Scheldt
+The focus of this exercise is the Belgian waters (the Belgian Exclusive Economic Zone, EEZ) and the Western Scheldt
 ```{r message = FALSE, warning = FALSE, echo = FALSE, results = 'hide'}
 # BCP <- mr_shp(key = "MarineRegions:eez",
 #                   filter = "Belgian Exclusive Economic Zone",
@@ -63,6 +66,7 @@ mapview(BCP, color = 'blue', alpha.regions = 0) +
   mapview(B3NM) +
   mapview(B12NM)
 
+if (!dir.exists("data")) dir.create("data")
 st_write(B3NM, file.path('data', 'B3NM.gpkg'), delete_layer = TRUE)
 st_write(B12NM, file.path('data', 'B12NM.gpkg'), delete_layer = TRUE)
 st_write(BCP, file.path('data', 'BCP.gpkg'), delete_layer = TRUE)
@@ -88,6 +92,9 @@ st_write(WScheldt, file.path('data', 'WScheldt.gpkg'), delete_layer = TRUE)
 # BACKGROUND INFO ON EMODNet Human Activities' WCS Service, and the 'route density maps'
 # GO to https://www.emodnet-humanactivities.eu/search-results.php?dataname=Vessel+Density+
 
+# create data/raster dir
+if(!dir.exists(file.path('data','raster'))) dir.create(file.path('data','raster'))
+
 # function to get belgian raster data, based on year, month, vessel_code
 getBelgianCSW <- function(year, month, vessel_code){
   url <- paste0("https://ows.emodnet-humanactivities.eu/wcs?service=wcs&version=1.0.0&request=getcoverage&coverage=emodnet:",
@@ -98,13 +105,18 @@ getBelgianCSW <- function(year, month, vessel_code){
                 "format=image/tiff&",
                 "interpolation=nearest&resx=0.00833333&resy=0.00833333"
   )
-  x <- raster(url)
+  filename <- file.path('data', 'raster',
+                                     paste0(year, '_', month, '_', vessel_code,'.tif'))
+  download.file(url = url,
+                destfile = filename,
+                mode='wb')
+  x <- raster(filename)
 }
 
 ```
 
 We extract the Vessel density data, for example here for the Fishing map of January 2019:
-
+(units are *number of routes / km² / ship type*)
 ```{r get_WCS_data, message = FALSE, warning = FALSE, echo = FALSE}
 # extract vessel density data and store it in a rasterbrick:
 
@@ -249,7 +261,7 @@ l <- lapply(bricks,
 
 ### Belgian EEZ:
 
-We extract all data from all the cells, and calculate the average for the whole BCP.
+We extract all data from all the cells, and calculate the average for the whole EEZ.
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # No we create a data frame to store the statistics that we will extract from the rasters.
@@ -270,7 +282,8 @@ We extract all data from all the cells, and calculate the average for the whole 
   df.sr.long <- melt.data.table(as.data.table(df.sr),
                                 id.vars = "Date")
 ```
-This is an example of the data in 'wide' format
+The table below shows the average values for the whole Belgian EEZ, for the different fishing types. We only have monthly data, so each data represents one month, from January 2019 to April 2020.
+(units are: *number of routes / km² / ship type*)
 
 ```{r BCP_table_wide, echo = FALSE}
 datatable(df.sr,
@@ -284,7 +297,7 @@ datatable(df.sr.long,
           rownames = FALSE) %>% formatRound(3, 2)
 ```
 
-A plot of the result:
+A plot of the data:
 
 ```{r plot, message = FALSE, warning = FALSE, echo = FALSE}
 
@@ -320,7 +333,8 @@ ggplot(df.sr.long, aes(x = Date, y = value, group = variable)) +
                                 id.vars = "Date")
 
 ```
-
+The table below shows the average values for the Western Scheldt, for the different fishing types. We only have monthly data, so each data represents one month, from January 2019 to April 2020.
+(units are *number of routes / km² / ship type*)
 ```{r Scheldt table, echo = FALSE}
 datatable(df.Scheldt,
           options = list(pageLength = 16),
@@ -347,13 +361,13 @@ ggplot(df.Scheldt.long, aes(x = Date, y = value, group = variable)) +
 
 ## 2020 vs 2019
 
-We create a mean value for
+We create a average value for the periods
 
  - February - April 2019
  - February - April 2020
  
-And plot both periods rasters
-(the map is the Fishing type example)
+And plot both periods. For each vessel type, both periods are visualised on a single map.
+(units are *number of routes / km² / ship type*)
 
 ```{r message = FALSE, warning = FALSE, echo = FALSE}
 # Average map of February-April 2019
@@ -421,6 +435,9 @@ mapviewpolygons <-
 
 
 ### Cargo 
+
+Cargo ships Feb-April 2019 vs Feb-April 2020 (units are *number of routes / km² / ship type*)
+
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
@@ -431,6 +448,9 @@ mapviewpolygons +
 ```
 
 ### Fishing 
+
+Fishing ships Feb-April 2019 vs Feb-April 2020 (units are *number of routes / km² / ship type*)
+
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
@@ -440,6 +460,8 @@ mapviewpolygons +
 ```
 
 ### Passenger 
+
+Passenger ships Feb-April 2019 vs Feb-April 2020 (units are *number of routes / km² / ship type*)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 mapviewpolygons +
@@ -448,6 +470,8 @@ mapviewpolygons +
 ```
 
 ### Tanker 
+
+Tanker ships Feb-April 2019 vs Feb-April 2020 (units are *number of routes / km² / ship type*)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 mapviewpolygons +
@@ -456,6 +480,8 @@ mapviewpolygons +
 ```
 
 ### Other 
+
+Other ships Feb-April 2019 vs Feb-April 2020 (units are *number of routes / km² / ship type*)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
@@ -465,6 +491,8 @@ mapviewpolygons +
 ```
 
 ### All 
+
+All ships Feb-April 2019 vs Feb-April 2020 (units are *number of routes / km² / ship type*)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the February - April Fishing maps for 2019 and 2020
 
@@ -478,7 +506,8 @@ mapviewpolygons +
 
 ### February - April 2019 compared to February - April 2020
 Comparing the period February-April 2020 vs 2019:
-(the different layers are the different boat types)
+The different layers are the different boat types, click on the 'layers' button to visualise different layers.
+(units are the difference in *number of routes / km² / ship type*)
 
 
 ```{r echo = FALSE}
@@ -510,7 +539,8 @@ mapviewpolygons +
 
 ### Month-by-month comparisons 2019 vs 2020
 Comparing the month-by-month differences between 2020 vs 2019:
-(the map is the Fishing type example)
+You can select the different layers by clicking on the layer symbol.
+
 
 ```{r message = FALSE, warning = FALSE, echo = FALSE}
 # Anomaly map January-April 2020 - January-April 2019
@@ -579,6 +609,8 @@ l <- lapply(list(Anomaly_Cargo, Anomaly_Fishing, Anomaly_Passenger,
 ```
 
 ### Cargo 
+
+Anomaly of cargo ships per month (units are *difference in number of routes / km² / ship type*)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
 mapviewpolygons +
@@ -590,6 +622,8 @@ mapviewpolygons +
 ```
 
 ### Fishing 
+
+Anomaly of fishing ships per month (units are *difference in number of routes / km² / ship type*)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
 mapviewpolygons +
@@ -601,6 +635,8 @@ mapviewpolygons +
 ```
 
 ### Passenger 
+
+Anomaly of passenger ships per month (units are *difference in number of routes / km² / ship type*)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
 mapviewpolygons +
@@ -612,6 +648,8 @@ mapviewpolygons +
 ```
 
 ### Tanker 
+
+Anomaly of tanker ships per month (units are *difference in number of routes / km² / ship type*)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
 mapviewpolygons +
@@ -623,6 +661,8 @@ mapviewpolygons +
 ```
 
 ### Other 
+
+Anomaly of other ships per month (units are *difference in number of routes / km² / ship type*)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
 mapviewpolygons +
@@ -634,6 +674,8 @@ mapviewpolygons +
 ```
 
 ### All 
+
+Anomaly of all ships per month (units are *difference in number of routes / km² / ship type*)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Plot the monthtly anomaly maps for 2019 vs 2020
 mapviewpolygons +
@@ -649,13 +691,16 @@ mapviewpolygons +
 ### Passengers excluding wind farm
 
 There is quite some traffic to the windfarms that are classified as 'Passenger' traffic.
-As this might be confusing, we will exclude this from the analysis.
+As this might be confusing, we will exclude this from the analysis. The excluded area is visualised in blue on the map below.
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 passenger_windfarm <- st_read('data/passenger_windfarm.gpkg', quiet = TRUE)
 
 mapviewpolygons +
-  mapview(passenger_windfarm) +
+  mapview(passenger_windfarm,
+          label = NULL,
+          popup = NULL,
+          homebutton = FALSE) +
   mapview(Anomaly_Passenger,
         col.regions = pal,
         at = c(-1000, -200, -100, -50, -25,
@@ -663,6 +708,7 @@ mapviewpolygons +
         )
 
 ```
+
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 
@@ -678,6 +724,7 @@ df.sr.pass <- df.sr[c('Date','Passenger','Pass_no_windfarm')]
 
 
 ```
+Below is a table showing the average monthly passenger density ('Passenger' column) and the same analysis but excluding the traffic to the wind farm ('Pass_no_windfarm').
 
 ```{r,  message = FALSE, warning = FALSE, echo = FALSE}
 datatable(df.sr.pass,
@@ -699,7 +746,11 @@ ggplot(df.sr.pass.long, aes(x = Date, y = value, group = variable)) +
 
 ### Fishing zones.
 
-In this part we'll look how much is being fished in the different zones:
+In this part we'll look how much is being fished in the different zones within the Belgian EEZ:
+
+* from the coastline to 3 nautical miles (NM)
+* from 3 to 12 nautical miles (NM)
+* further than 12 nautical miles from the coastline
 
 ```{r,  message = FALSE, warning = FALSE, echo = FALSE}
 # extended the lines of 3 and 12 NM a bit
@@ -760,7 +811,7 @@ The more information about the polygons used in this exercise:
 
 ## Code availability
 
-All the code needed to run this analysis is available [here](index.Rmd).
+All the code needed to run this analysis is available [here](https://github.com/vlizBE/Vessel_route_densities/).
 
 This code makes use of following R packages:
 
@@ -771,4 +822,18 @@ This code makes use of following R packages:
 - data.table: for manipulation dataframes/tables
 - DT: for visualisation of the data tables
 - mregions: for standardize marine regions from http://www.marineregions.org
+
+## Reproducibility
+
+You can re-run the full analysis in an RStudio environment by clicking on the button below.
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/vlizBE/Vessel_route_densities/master?urlpath=rstudio)
+
+This will open an online RStudio environment. To run the analysis, open the 'index.Rmd' file.
+In this file, you can run separate code chunks or click on the 'knit' button to recreate the html file
+(this will take a while, and open a pop-up window).
+You can also edit the code and run your own analysis.
+
+If you have any issues with running the analysis, please let us know by [opening an issue](https://github.com/vlizBE/Vessel_route_densities/issues).
+
 
